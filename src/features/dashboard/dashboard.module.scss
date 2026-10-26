@@ -983,3 +983,64 @@
     box-shadow: 0 0 0 0 transparent;
   }
 }
+
+/* homelab fork: per-account status table */
+.accountTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  color: var(--text-secondary);
+
+  th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    padding: 6px 8px 6px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  td {
+    padding: 6px 8px 6px 0;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+  }
+
+  .num {
+    text-align: right;
+    font-family: $font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.accountIdentity {
+  color: var(--text-primary);
+  font-family: $font-mono;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stateDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.state_active {
+  background: var(--viz-success);
+}
+
+.state_cooling {
+  background: var(--amber-color);
+}
+
+.state_unavailable {
+  background: var(--error-color, #e5484d);
+}
+
+.state_disabled {
+  background: var(--text-quaternary);
+}

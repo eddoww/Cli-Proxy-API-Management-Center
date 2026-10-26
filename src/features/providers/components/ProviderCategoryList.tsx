@@ -34,7 +34,7 @@ export function ProviderCategoryList({ groups, activeBrand, onSelect }: Provider
         const itemClass = [
           styles.item,
           active ? styles.active : '',
-          group.id === 'kimi' ? styles.itemKimi : '',
+          
         ]
           .filter(Boolean)
           .join(' ');
@@ -93,7 +93,7 @@ export function ProviderCategoryList({ groups, activeBrand, onSelect }: Provider
             <span
               className={[
                 styles.badge,
-                total === 0 ? (group.id === 'kimi' ? styles.badgeKimi : styles.badgeAmber) : '',
+                total === 0 ? styles.badgeAmber : '',
               ]
                 .filter(Boolean)
                 .join(' ')}

@@ -201,7 +201,15 @@
     "cta_system_desc": "Version details and management center info.",
     "window_m": "{{minutes}}m",
     "window_h": "{{hours}}h",
-    "window_hm": "{{hours}}h {{minutes}}m"
+    "window_hm": "{{hours}}h {{minutes}}m",
+    "accounts_account": "Account",
+    "accounts_provider": "Provider",
+    "accounts_state": "State",
+    "accounts_ok_fail": "OK / Fail",
+    "accounts_state_active": "Active",
+    "accounts_state_cooling": "Cooling down",
+    "accounts_state_unavailable": "Unavailable",
+    "accounts_state_disabled": "Disabled"
   },
   "basic_settings": {
     "debug_enable": "Enable Debug Mode",

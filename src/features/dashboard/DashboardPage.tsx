@@ -35,12 +35,20 @@ const TILE_ACCENTS: Record<MeterTone, string> = {
 const formatHeadline = (value: number): string =>
   value < 100_000 ? value.toLocaleString() : formatCompactNumber(value);
 
+const formatCooldown = (seconds: number): string => {
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m`;
+};
+
 export function DashboardPage() {
   const { t, i18n } = useTranslation();
   const serverVersion = useAuthStore((state) => state.serverVersion);
   const serverBuildDate = useAuthStore((state) => state.serverBuildDate);
 
-  const { connectionStatus, connected, config, counts, traffic, providers, credentials, refresh } =
+  const { connectionStatus, connected, config, counts, traffic, providers, credentials, accounts, refresh } =
     useDashboardOverview();
 
   useHeaderRefresh(refresh, connected);
@@ -470,6 +478,36 @@ export function DashboardPage() {
                   ))}
                 </ul>
               </div>
+              {accounts && accounts.length > 0 ? (
+                <table className={styles.accountTable}>
+                  <thead>
+                    <tr>
+                      <th>{t('dashboard.accounts_account')}</th>
+                      <th>{t('dashboard.accounts_provider')}</th>
+                      <th>{t('dashboard.accounts_state')}</th>
+                      <th className={styles.num}>{t('dashboard.accounts_ok_fail')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {accounts.map((row) => (
+                      <tr key={row.key} title={row.statusMessage || undefined}>
+                        <td className={styles.accountIdentity}>{row.identity}</td>
+                        <td>{providerLabel(row.provider, unknownProviderLabel)}</td>
+                        <td>
+                          <span className={`${styles.stateDot} ${styles[`state_${row.state}`]}`} />
+                          {t(`dashboard.accounts_state_${row.state}`)}
+                          {row.state === 'cooling' && row.cooldownSeconds > 0
+                            ? ` · ${formatCooldown(row.cooldownSeconds)}`
+                            : ''}
+                        </td>
+                        <td className={styles.num}>
+                          {row.success.toLocaleString()} / {row.failure.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : null}
               <Link to="/auth-files" className={styles.panelLink}>
                 {t('dashboard.health_link')}{' '}
                 <span className={styles.linkArrow} aria-hidden="true">

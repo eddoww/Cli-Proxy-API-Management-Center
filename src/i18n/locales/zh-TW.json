@@ -201,7 +201,15 @@
     "cta_system_desc": "版本詳情與管理中心資訊。",
     "window_m": "{{minutes}} 分鐘",
     "window_h": "{{hours}} 小時",
-    "window_hm": "{{hours}} 小時 {{minutes}} 分"
+    "window_hm": "{{hours}} 小時 {{minutes}} 分",
+    "accounts_account": "Account",
+    "accounts_provider": "Provider",
+    "accounts_state": "State",
+    "accounts_ok_fail": "OK / Fail",
+    "accounts_state_active": "Active",
+    "accounts_state_cooling": "Cooling down",
+    "accounts_state_unavailable": "Unavailable",
+    "accounts_state_disabled": "Disabled"
   },
   "basic_settings": {
     "debug_enable": "啟用除錯模式",
@@ -549,7 +557,6 @@
     "reset_confirm_button": "確認重置",
     "reset_not_confirmed": "尚未確認額度重置成功，請重新整理額度後再決定是否重試。",
     "reset_cooldown_failed": "額度已重置，但代理冷卻清除失敗。請在原連線的認證檔案頁面使用「清除冷卻」，不要再次消耗重置卡。",
-
     "reset_success": "已重置「{{name}}」的 Codex 配額",
     "reset_failed": "重置「{{name}}」的 Codex 配額失敗：{{message}}",
     "plan_plus": "Plus",

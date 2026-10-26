@@ -40,6 +40,18 @@ export interface CredentialHealth {
   byType: Array<{ type: string; count: number }>;
 }
 
+/** homelab fork: per-account status row for the dashboard Accounts table */
+export interface AccountStatusRow {
+  key: string;
+  identity: string;
+  provider: string;
+  state: 'active' | 'cooling' | 'unavailable' | 'disabled';
+  cooldownSeconds: number;
+  success: number;
+  failure: number;
+  statusMessage: string;
+}
+
 /** 顶部计数卡片的原始数值 */
 export interface DashboardCounts {
   managementKeys: number | null;

@@ -201,7 +201,15 @@
     "cta_system_desc": "Chi tiết phiên bản và thông tin trung tâm quản lý.",
     "window_m": "{{minutes}}p",
     "window_h": "{{hours}}g",
-    "window_hm": "{{hours}}g {{minutes}}p"
+    "window_hm": "{{hours}}g {{minutes}}p",
+    "accounts_account": "Account",
+    "accounts_provider": "Provider",
+    "accounts_state": "State",
+    "accounts_ok_fail": "OK / Fail",
+    "accounts_state_active": "Active",
+    "accounts_state_cooling": "Cooling down",
+    "accounts_state_unavailable": "Unavailable",
+    "accounts_state_disabled": "Disabled"
   },
   "basic_settings": {
     "debug_enable": "Bật chế độ Debug",

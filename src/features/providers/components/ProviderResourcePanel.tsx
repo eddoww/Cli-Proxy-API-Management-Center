@@ -2,9 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { IconExternalLink, IconPlus, IconSearch } from '@/components/ui/icons';
 import type { ProviderRecentUsageMap } from '@/components/providers/utils';
 import { PROVIDER_LOGOS } from '../brandLogos';
-import { getKimiAffiliateUrl } from '../kimi';
 import { APIKEY_FUN_AFFILIATE_URL, APIKEY_FUN_DASHBOARD_URL } from '../sponsor';
-import { getSponsorProviderDefinition } from '../sponsorDefinitions';
 import type { ProviderGroup, ProviderResource } from '../types';
 import { ProviderResourceTable } from './ProviderResourceTable';
 import { ProviderResourceToolbar } from './ProviderResourceToolbar';
@@ -52,18 +50,15 @@ export function ProviderResourcePanel({
   onToggleDisabled,
   onCreate,
 }: ProviderResourcePanelProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const logo = PROVIDER_LOGOS[group.id];
   const providerTitle = t(`providersPage.providerNames.${group.id}`);
   const hasProviderInfo = group.resources.length > 0;
-  const showSponsorRegistrationLink = group.id === 'apikeyFun' && !hasProviderInfo;
-  const showSponsorDashboardLink = group.id === 'apikeyFun' && hasProviderInfo;
-  const registrationUrl =
-    group.id === 'kimi'
-      ? getKimiAffiliateUrl(i18n.resolvedLanguage ?? i18n.language)
-      : group.id === 'fennoAI' || group.id === 'qiniuCloud'
-        ? getSponsorProviderDefinition(group.id).affiliateUrl
-        : null;
+  const showSponsorRegistrationLink = false;
+  const showSponsorDashboardLink = false;
+  void hasProviderInfo;
+  // homelab fork: no affiliate registration links.
+  const registrationUrl: string | null = null;
   const registrationLabel = t(
     group.id === 'kimi' ? 'providersPage.sponsor.registerNow' : 'providersPage.sponsor.registerLink'
   );
@@ -150,9 +145,6 @@ export function ProviderResourcePanel({
                   <span className={styles.sponsorLinkText}>{registrationLabel}</span>
                   <IconExternalLink className={styles.sponsorLinkIcon} size={14} />
                 </a>
-                {group.id === 'kimi' ? (
-                  <p className={styles.kimiPromo}>{t('providersPage.sponsor.kimiPromo')}</p>
-                ) : null}
               </>
             ) : null}
           </div>

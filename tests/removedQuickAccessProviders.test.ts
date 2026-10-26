@@ -17,9 +17,11 @@ describe('removed quick-access providers', () => {
     for (const [brand] of retiredEndpoints) {
       expect(ids).not.toContain(brand);
     }
-    for (const brand of ['apikeyFun', 'fennoAI', 'qiniuCloud', 'kimi']) {
-      expect(ids).toContain(brand);
+    // homelab fork: paid partner groups are gone, Kimi stays as a real provider
+    for (const brand of ['apikeyFun', 'fennoAI', 'qiniuCloud']) {
+      expect(ids).not.toContain(brand);
     }
+    expect(ids).toContain('kimi');
   });
 
   for (const [name, baseUrl] of retiredEndpoints) {

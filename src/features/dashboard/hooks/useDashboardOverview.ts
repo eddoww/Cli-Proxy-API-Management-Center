@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { summarizeCooldowns } from '@/features/authFiles/cooldowns';
+import { deriveAuthFileIdentity } from '@/features/authFiles/identity';
 import { authFilesApi } from '@/services/api';
 import { useAuthStore, useConfigStore, useModelsStore } from '@/stores';
 import { useApiKeysForModels } from '@/hooks/useApiKeysForModels';
@@ -12,6 +14,7 @@ import type { Config } from '@/types';
 import type { AuthFileItem } from '@/types/authFile';
 import {
   TRAFFIC_BUCKET_MINUTES,
+  type AccountStatusRow,
   type CredentialHealth,
   type DashboardCounts,
   type ProviderTraffic,
@@ -270,6 +273,42 @@ export function useDashboardOverview() {
     };
   }, [authFiles]);
 
+  // homelab fork: per-account OAuth status (identity, state, cooldown, success/fail)
+  const accounts = useMemo<AccountStatusRow[] | null>(() => {
+    if (!authFiles) return null;
+    const rank = { cooling: 0, unavailable: 1, active: 2, disabled: 3 } as const;
+    return authFiles
+      .map((file, index) => {
+        const cooldown = file.cooldownSnapshot
+          ? summarizeCooldowns(file.cooldownSnapshot, file.cooldownSnapshot.receivedAtMs)
+          : null;
+        const cooling = Boolean(cooldown && (cooldown.credentialWide || cooldown.modelCount > 0));
+        const state: AccountStatusRow['state'] = file.disabled
+          ? 'disabled'
+          : file.unavailable
+            ? 'unavailable'
+            : cooling
+              ? 'cooling'
+              : 'active';
+        return {
+          key: `${file.name}-${index}`,
+          identity: deriveAuthFileIdentity(file).primary || file.name,
+          provider: providerIdOfAuthFile(file),
+          state,
+          cooldownSeconds: cooldown?.earliestSeconds ?? 0,
+          success: Number(file.successCount ?? 0) || 0,
+          failure: Number(file.failureCount ?? 0) || 0,
+          statusMessage: typeof file.statusMessage === 'string' ? file.statusMessage : '',
+        };
+      })
+      .sort(
+        (a, b) =>
+          rank[a.state] - rank[b.state] ||
+          a.provider.localeCompare(b.provider) ||
+          a.identity.localeCompare(b.identity)
+      );
+  }, [authFiles]);
+
   const counts = useMemo<DashboardCounts>(
     () => ({
       managementKeys: config ? (config.apiKeys?.length ?? 0) : null,
@@ -291,6 +330,7 @@ export function useDashboardOverview() {
     traffic,
     providers,
     credentials,
+    accounts,
     refresh,
   };
 }

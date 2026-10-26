@@ -9,8 +9,8 @@ export const KIMI_OPENAI_BASE_URL = `${KIMI_LEGACY_OPENAI_BASE_URL}/v1`;
 export const KIMI_DOMESTIC_OPENAI_BASE_URL = `${KIMI_DOMESTIC_BASE_URL}/v1`;
 export const KIMI_ANTHROPIC_BASE_URL = `${KIMI_LEGACY_OPENAI_BASE_URL}/anthropic`;
 export const KIMI_DOMESTIC_ANTHROPIC_BASE_URL = `${KIMI_DOMESTIC_BASE_URL}/anthropic`;
-export const KIMI_CHINESE_AFFILIATE_URL = 'https://platform.kimi.com/?aff=cliproxyapi';
-export const KIMI_INTERNATIONAL_AFFILIATE_URL = 'https://platform.kimi.ai/?aff=cliproxyapi';
+export const KIMI_CHINESE_AFFILIATE_URL = 'https://platform.kimi.com/';
+export const KIMI_INTERNATIONAL_AFFILIATE_URL = 'https://platform.kimi.ai/';
 
 export const KIMI_BASE_URL_OPTIONS = [
   {

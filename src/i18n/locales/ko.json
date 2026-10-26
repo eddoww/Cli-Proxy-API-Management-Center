@@ -201,7 +201,15 @@
     "cta_system_desc": "버전 세부 정보 및 관리 센터 정보입니다.",
     "window_m": "{{minutes}}분",
     "window_h": "{{hours}}시간",
-    "window_hm": "{{hours}}시간 {{minutes}}분"
+    "window_hm": "{{hours}}시간 {{minutes}}분",
+    "accounts_account": "Account",
+    "accounts_provider": "Provider",
+    "accounts_state": "State",
+    "accounts_ok_fail": "OK / Fail",
+    "accounts_state_active": "Active",
+    "accounts_state_cooling": "Cooling down",
+    "accounts_state_unavailable": "Unavailable",
+    "accounts_state_disabled": "Disabled"
   },
   "basic_settings": {
     "debug_enable": "디버그 모드 활성화",

@@ -287,17 +287,15 @@ export const getProviderModelCapabilities = (brand: ProviderBrand): ProviderMode
   modalities: brand === 'openaiCompatibility',
 });
 
+// homelab fork: paid partner groups (apikeyFun, fennoAI, qiniuCloud) removed; Kimi is a normal provider.
 export const PROVIDER_BRAND_ORDER: ProviderBrand[] = [
-  'kimi',
+  'claude',
+  'codex',
   'gemini',
   'interactions',
-  'codex',
-  'meta',
-  'xai',
-  'claude',
   'vertex',
+  'xai',
+  'meta',
+  'kimi',
   'openaiCompatibility',
-  'apikeyFun',
-  'fennoAI',
-  'qiniuCloud',
 ];
