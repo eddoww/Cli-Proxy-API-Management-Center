@@ -69,11 +69,13 @@ const normalizeConfig = (raw: PluginConfigObject): ComboConfig => {
 const toWireConfig = (config: ComboConfig): PluginConfigObject => ({
   enabled: config.enabled,
   default_strategy: config.defaultStrategy,
+  // Send every field explicitly: the management API merges objects, so omitting
+  // a cleared field would silently keep its previous value.
   combos: config.combos.map((combo) => ({
     name: combo.name.trim(),
     models: combo.models.map((model) => model.trim()).filter(Boolean),
-    ...(combo.strategy ? { strategy: combo.strategy } : {}),
-    ...(combo.description.trim() ? { description: combo.description.trim() } : {}),
+    strategy: combo.strategy,
+    description: combo.description.trim(),
   })),
   capabilities: config.capabilities,
 });
