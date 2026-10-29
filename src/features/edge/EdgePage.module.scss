@@ -1,0 +1,105 @@
+@use '../../styles/mixins' as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.stateShell {
+  display: flex;
+  min-height: 60vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dirty {
+  color: var(--warning-color, #d97706);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.warning {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--warning-color, #d97706);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  background: var(--bg-secondary);
+}
+
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 240px;
+  flex: 1 1 240px;
+}
+
+.badgeOk,
+.badgeWarn {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+}
+
+.badgeOk {
+  color: var(--success-color, #16a34a);
+  border-color: color-mix(in srgb, var(--success-color, #16a34a) 40%, transparent);
+}
+
+.badgeWarn {
+  color: var(--danger-color, #dc2626);
+  border-color: color-mix(in srgb, var(--danger-color, #dc2626) 40%, transparent);
+}
+
+.limits {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+@include mobile {
+  .row {
+    gap: 12px;
+  }
+}
