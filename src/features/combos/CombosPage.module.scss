@@ -194,3 +194,19 @@
     }
   }
 }
+
+.capBuiltin,
+.capCustom {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.capCustom {
+  border-color: var(--warning-color, #d97706);
+  color: var(--warning-color, #d97706);
+}

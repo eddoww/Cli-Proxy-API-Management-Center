@@ -2364,7 +2364,10 @@
     "error_name_charset": "Combo name {{name}} may only use letters, numbers, dot, dash and underscore",
     "error_name_duplicate": "Combo name {{name}} is used twice",
     "error_members_required": "Combo {{name}} needs at least one model",
-    "error_member_empty": "Combo {{name}} has an empty model entry"
+    "error_member_empty": "Combo {{name}} has an empty model entry",
+    "cap_builtin": "built-in",
+    "cap_override": "custom override",
+    "cap_reset": "Use built-in"
   },
   "edge": {
     "title": "AI Edge",
@@ -2372,8 +2375,8 @@
     "version": "Edge {{version}}",
     "upstream": "Proxy {{upstream}}",
     "persisted": "Settings stored on disk",
-    "not_persisted": "Settings are in memory only",
-    "persist_warning": "The settings volume is not writable yet, so changes will be lost on restart.",
+    "not_persisted": "No settings file yet",
+    "persist_warning": "Saving writes to the settings volume. If that volume is not writable, saving fails and nothing is applied.",
     "provider_ready": "Credential configured",
     "provider_missing": "Missing credential",
     "enabled": "Enabled",

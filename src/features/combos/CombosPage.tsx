@@ -9,76 +9,28 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { pluginsApi, edgeApi } from '@/services/api';
 import { useAuthStore, useNotificationStore } from '@/stores';
-import { getErrorMessage, isRecord } from '@/utils/helpers';
-import type { PluginConfigObject, PluginListEntry } from '@/types';
+import { getErrorMessage } from '@/utils/helpers';
+import type { PluginListEntry } from '@/types';
+import {
+  CAPABILITIES,
+  STRATEGY_FALLBACK,
+  STRATEGY_ROUND_ROBIN,
+  effectiveCapabilities,
+  hasOverride,
+  normalizeConfig,
+  resetCapabilityOverride,
+  stableStringify,
+  toWireConfig,
+  toggleCapability,
+  validateCombos,
+  type Capability,
+  type Combo,
+  type ComboConfig,
+  type ValidationIssue,
+} from './combosConfig';
 import styles from './CombosPage.module.scss';
 
 const PLUGIN_ID = 'combo-router';
-const STRATEGY_FALLBACK = 'fallback';
-const STRATEGY_ROUND_ROBIN = 'round-robin';
-const CAPABILITIES = ['vision', 'audio', 'video', 'pdf', 'tools'] as const;
-type Capability = (typeof CAPABILITIES)[number];
-
-interface Combo {
-  name: string;
-  models: string[];
-  strategy: string;
-  description: string;
-}
-
-interface ComboConfig {
-  enabled: boolean;
-  defaultStrategy: string;
-  combos: Combo[];
-  capabilities: Record<string, string[]>;
-}
-
-const asString = (value: unknown): string => (value === undefined || value === null ? '' : String(value));
-
-const normalizeCombo = (value: unknown): Combo => {
-  const record = isRecord(value) ? value : {};
-  const models = Array.isArray(record.models)
-    ? record.models.map((item) => asString(item)).filter((item) => item.trim().length > 0)
-    : [];
-  return {
-    name: asString(record.name),
-    models,
-    strategy: asString(record.strategy),
-    description: asString(record.description),
-  };
-};
-
-const normalizeConfig = (raw: PluginConfigObject): ComboConfig => {
-  const combos = Array.isArray(raw.combos) ? raw.combos.map(normalizeCombo) : [];
-  const capabilities: Record<string, string[]> = {};
-  if (isRecord(raw.capabilities)) {
-    for (const [model, caps] of Object.entries(raw.capabilities)) {
-      if (Array.isArray(caps)) {
-        capabilities[model] = caps.map((cap) => asString(cap)).filter(Boolean);
-      }
-    }
-  }
-  return {
-    enabled: raw.enabled !== false,
-    defaultStrategy: asString(raw.default_strategy) || STRATEGY_FALLBACK,
-    combos,
-    capabilities,
-  };
-};
-
-const toWireConfig = (config: ComboConfig): PluginConfigObject => ({
-  enabled: config.enabled,
-  default_strategy: config.defaultStrategy,
-  // Send every field explicitly: the management API merges objects, so omitting
-  // a cleared field would silently keep its previous value.
-  combos: config.combos.map((combo) => ({
-    name: combo.name.trim(),
-    models: combo.models.map((model) => model.trim()).filter(Boolean),
-    strategy: combo.strategy,
-    description: combo.description.trim(),
-  })),
-  capabilities: config.capabilities,
-});
 
 export function CombosPage() {
   const { t } = useTranslation();
@@ -96,7 +48,7 @@ export function CombosPage() {
 
   const connected = connectionStatus === 'connected';
   const dirty = useMemo(
-    () => (config ? JSON.stringify(toWireConfig(config)) !== savedSnapshot : false),
+    () => (config ? stableStringify(toWireConfig(config)) !== savedSnapshot : false),
     [config, savedSnapshot]
   );
 
@@ -113,11 +65,10 @@ export function CombosPage() {
         pluginsApi.list(),
         pluginsApi.getConfig(PLUGIN_ID),
       ]);
-      const entry = plugins.plugins.find((item) => item.id === PLUGIN_ID) ?? null;
-      setPlugin(entry);
+      setPlugin(plugins.plugins.find((item) => item.id === PLUGIN_ID) ?? null);
       const normalized = normalizeConfig(pluginConfig);
       setConfig(normalized);
-      setSavedSnapshot(JSON.stringify(toWireConfig(normalized)));
+      setSavedSnapshot(stableStringify(toWireConfig(normalized)));
       try {
         setModels(await edgeApi.listModels());
       } catch {
@@ -137,15 +88,14 @@ export function CombosPage() {
   const updateCombo = (index: number, patch: Partial<Combo>) => {
     setConfig((current) => {
       if (!current) return current;
-      const combos = current.combos.map((combo, i) => (i === index ? { ...combo, ...patch } : combo));
-      return { ...current, combos };
+      return { ...current, combos: current.combos.map((combo, i) => (i === index ? { ...combo, ...patch } : combo)) };
     });
   };
 
   const addCombo = () => {
     const name = newComboName.trim();
     if (!name || !config) return;
-    if (config.combos.some((combo) => combo.name === name)) {
+    if (config.combos.some((combo) => combo.name.trim() === name)) {
       showNotification(t('combos.name_exists'), 'error');
       return;
     }
@@ -169,78 +119,80 @@ export function CombosPage() {
       if (!current) return current;
       const combo = current.combos[index];
       if (!combo || combo.models.includes(value)) return current;
-      const combos = current.combos.map((item, i) =>
-        i === index ? { ...item, models: [...item.models, value] } : item
-      );
-      return { ...current, combos };
+      return {
+        ...current,
+        combos: current.combos.map((item, i) =>
+          i === index ? { ...item, models: [...item.models, value] } : item
+        ),
+      };
     });
   };
 
   const removeMember = (comboIndex: number, modelIndex: number) => {
     setConfig((current) => {
       if (!current) return current;
-      const combos = current.combos.map((combo, i) =>
-        i === comboIndex ? { ...combo, models: combo.models.filter((_, m) => m !== modelIndex) } : combo
-      );
-      return { ...current, combos };
+      return {
+        ...current,
+        combos: current.combos.map((combo, i) =>
+          i === comboIndex ? { ...combo, models: combo.models.filter((_, m) => m !== modelIndex) } : combo
+        ),
+      };
     });
   };
 
   const moveMember = (comboIndex: number, modelIndex: number, delta: number) => {
     setConfig((current) => {
       if (!current) return current;
-      const combos = current.combos.map((combo, i) => {
-        if (i !== comboIndex) return combo;
-        const target = modelIndex + delta;
-        if (target < 0 || target >= combo.models.length) return combo;
-        const next = [...combo.models];
-        const [moved] = next.splice(modelIndex, 1);
-        next.splice(target, 0, moved);
-        return { ...combo, models: next };
-      });
-      return { ...current, combos };
+      return {
+        ...current,
+        combos: current.combos.map((combo, i) => {
+          if (i !== comboIndex) return combo;
+          const target = modelIndex + delta;
+          if (target < 0 || target >= combo.models.length) return combo;
+          const next = [...combo.models];
+          const [moved] = next.splice(modelIndex, 1);
+          next.splice(target, 0, moved);
+          return { ...combo, models: next };
+        }),
+      };
     });
   };
 
-  const toggleCapability = (model: string, capability: Capability) => {
-    setConfig((current) => {
-      if (!current) return current;
-      const existing = new Set(current.capabilities[model] ?? []);
-      if (existing.has(capability)) existing.delete(capability);
-      else existing.add(capability);
-      const capabilities = { ...current.capabilities };
-      if (existing.size === 0) delete capabilities[model];
-      else capabilities[model] = Array.from(existing);
-      return { ...current, capabilities };
-    });
+  const onToggleCapability = (model: string, capability: Capability) => {
+    setConfig((current) => (current ? toggleCapability(current, model, capability) : current));
   };
 
-  const validate = (): string => {
-    if (!config) return '';
-    const seen = new Set<string>();
-    for (const combo of config.combos) {
-      const name = combo.name.trim();
-      if (!name) return t('combos.error_name_required');
-      if (!/^[A-Za-z0-9_.-]+$/.test(name)) return t('combos.error_name_charset', { name });
-      if (seen.has(name)) return t('combos.error_name_duplicate', { name });
-      seen.add(name);
-      if (combo.models.length === 0) return t('combos.error_members_required', { name });
-      if (combo.models.some((model) => !model.trim())) return t('combos.error_member_empty', { name });
+  const onResetCapabilities = (model: string) => {
+    setConfig((current) => (current ? resetCapabilityOverride(current, model) : current));
+  };
+
+  const issueMessage = (issue: ValidationIssue): string => {
+    switch (issue.code) {
+      case 'name_required':
+        return t('combos.error_name_required');
+      case 'name_charset':
+        return t('combos.error_name_charset', { name: issue.name });
+      case 'name_duplicate':
+        return t('combos.error_name_duplicate', { name: issue.name });
+      case 'members_required':
+        return t('combos.error_members_required', { name: issue.name });
+      default:
+        return t('combos.error_member_empty', { name: issue.name });
     }
-    return '';
   };
 
   const save = async () => {
     if (!config) return;
-    const validationError = validate();
-    if (validationError) {
-      showNotification(validationError, 'error');
+    const issues = validateCombos(config);
+    if (issues.length > 0) {
+      showNotification(issueMessage(issues[0]), 'error');
       return;
     }
     setSaving(true);
     try {
-      await pluginsApi.patchConfig(PLUGIN_ID, toWireConfig(config));
-      setSavedSnapshot(JSON.stringify(toWireConfig(config)));
+      const wire = toWireConfig(config);
+      await pluginsApi.patchConfig(PLUGIN_ID, wire);
+      setSavedSnapshot(stableStringify(wire));
       showNotification(t('combos.saved'), 'success');
       await load();
     } catch (err: unknown) {
@@ -266,6 +218,7 @@ export function CombosPage() {
     );
   }
 
+  const pluginMissing = !plugin || !plugin.registered;
   const usedModels = Array.from(new Set(config?.combos.flatMap((combo) => combo.models) ?? [])).sort();
 
   return (
@@ -285,9 +238,7 @@ export function CombosPage() {
         }
       >
         <p className={styles.hint}>{t('combos.intro')}</p>
-        {plugin && !plugin.registered ? (
-          <div className={styles.warning}>{t('combos.plugin_missing')}</div>
-        ) : null}
+        {pluginMissing ? <div className={styles.warning}>{t('combos.plugin_missing')}</div> : null}
         <div className={styles.row}>
           <ToggleSwitch
             checked={config?.enabled ?? true}
@@ -338,8 +289,10 @@ export function CombosPage() {
           <EmptyState title={t('combos.empty_title')} description={t('combos.empty_description')} />
         ) : null}
         <div className={styles.comboList}>
+          {/* Keyed by position: combos are never reordered here, and keying by
+              name would remount the card (and drop input focus) on each edit. */}
           {config?.combos.map((combo, index) => (
-            <div className={styles.combo} key={`${combo.name}-${index}`}>
+            <div className={styles.combo} key={index}>
               <div className={styles.comboHead}>
                 <Input
                   value={combo.name}
@@ -402,31 +355,43 @@ export function CombosPage() {
         </div>
       </Card>
 
-      {usedModels.length > 0 ? (
-        <Card title={t('combos.capabilities_title')} extra={null}>
+      {usedModels.length > 0 && config ? (
+        <Card title={t('combos.capabilities_title')}>
           <p className={styles.hint}>{t('combos.capabilities_hint')}</p>
           <div className={styles.capList}>
-            {usedModels.map((model) => (
-              <div className={styles.capRow} key={model}>
-                <code>{model}</code>
-                <div className={styles.caps}>
-                  {CAPABILITIES.map((capability) => {
-                    const active = (config?.capabilities[model] ?? []).includes(capability);
-                    return (
-                      <button
-                        type="button"
-                        key={capability}
-                        className={active ? styles.capActive : styles.cap}
-                        onClick={() => toggleCapability(model, capability)}
-                        aria-pressed={active}
-                      >
-                        {t(`combos.cap_${capability}`)}
-                      </button>
-                    );
-                  })}
+            {usedModels.map((model) => {
+              const overridden = hasOverride(config, model);
+              const active = effectiveCapabilities(config, model);
+              return (
+                <div className={styles.capRow} key={model}>
+                  <code>{model}</code>
+                  <span className={overridden ? styles.capCustom : styles.capBuiltin}>
+                    {overridden ? t('combos.cap_override') : t('combos.cap_builtin')}
+                  </span>
+                  <div className={styles.caps}>
+                    {CAPABILITIES.map((capability) => {
+                      const on = active.includes(capability);
+                      return (
+                        <button
+                          type="button"
+                          key={capability}
+                          className={on ? styles.capActive : styles.cap}
+                          onClick={() => onToggleCapability(model, capability)}
+                          aria-pressed={on}
+                        >
+                          {t(`combos.cap_${capability}`)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {overridden ? (
+                    <Button variant="ghost" size="sm" onClick={() => onResetCapabilities(model)}>
+                      {t('combos.cap_reset')}
+                    </Button>
+                  ) : null}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       ) : null}

@@ -2370,7 +2370,10 @@
     "error_name_charset": "Tên combo {{name}} chỉ được dùng chữ, số, dấu chấm, gạch ngang và gạch dưới",
     "error_name_duplicate": "Tên combo {{name}} bị trùng",
     "error_members_required": "Combo {{name}} cần ít nhất một mô hình",
-    "error_member_empty": "Combo {{name}} có mục mô hình trống"
+    "error_member_empty": "Combo {{name}} có mục mô hình trống",
+    "cap_builtin": "mặc định",
+    "cap_override": "ghi đè tùy chỉnh",
+    "cap_reset": "Dùng mặc định"
   },
   "edge": {
     "title": "AI Edge",
@@ -2378,8 +2381,8 @@
     "version": "Edge {{version}}",
     "upstream": "Proxy {{upstream}}",
     "persisted": "Cài đặt được lưu trên đĩa",
-    "not_persisted": "Cài đặt chỉ trong bộ nhớ",
-    "persist_warning": "Ổ cài đặt chưa ghi được, thay đổi sẽ mất khi khởi động lại.",
+    "not_persisted": "Chưa có tệp cài đặt",
+    "persist_warning": "Việc lưu sẽ ghi vào ổ cài đặt. Nếu ổ không ghi được, lưu sẽ thất bại và không có gì được áp dụng.",
     "provider_ready": "Đã cấu hình thông tin xác thực",
     "provider_missing": "Thiếu thông tin xác thực",
     "enabled": "Bật",

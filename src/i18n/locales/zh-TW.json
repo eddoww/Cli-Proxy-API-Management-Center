@@ -2390,7 +2390,10 @@
     "error_name_charset": "組合名稱 {{name}} 只能包含字母、數字、點、連字號與底線",
     "error_name_duplicate": "組合名稱 {{name}} 重複",
     "error_members_required": "組合 {{name}} 至少需要一個模型",
-    "error_member_empty": "組合 {{name}} 中有空的模型項目"
+    "error_member_empty": "組合 {{name}} 中有空的模型項目",
+    "cap_builtin": "內建",
+    "cap_override": "自訂覆寫",
+    "cap_reset": "使用內建"
   },
   "edge": {
     "title": "AI 前置",
@@ -2398,8 +2401,8 @@
     "version": "前置 {{version}}",
     "upstream": "代理 {{upstream}}",
     "persisted": "設定已儲存到磁碟",
-    "not_persisted": "設定僅在記憶體中",
-    "persist_warning": "設定磁碟區尚無法寫入，變更會在重新啟動後遺失。",
+    "not_persisted": "尚無設定檔",
+    "persist_warning": "儲存會寫入設定磁碟區。若該磁碟區無法寫入，儲存會失敗且不會套用任何變更。",
     "provider_ready": "已設定憑證",
     "provider_missing": "缺少憑證",
     "enabled": "啟用",
