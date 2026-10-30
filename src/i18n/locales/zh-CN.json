@@ -2396,5 +2396,27 @@
     "save_failed": "无法保存前置设置",
     "load_failed": "无法连接前置服务",
     "unavailable": "AI 前置不可用"
+  },
+  "connect": {
+    "title": "连接你的应用",
+    "intro": "将任意 OpenAI 兼容客户端指向此基础 URL，并使用下方密钥。",
+    "base_url": "基础 URL",
+    "api_key": "API 密钥",
+    "no_key": "尚未配置客户端密钥",
+    "unavailable": "连接不可用",
+    "reveal": "显示",
+    "hide": "隐藏",
+    "copy": "复制",
+    "copied": "已复制",
+    "use_it": "使用",
+    "copy_model": "复制模型",
+    "curl_label": "curl",
+    "endpoint": "端点",
+    "copy_url": "复制 URL",
+    "test": "测试",
+    "test_ok": "正常 · {{model}} · {{ms}} 毫秒",
+    "combos_note": "下面的每个组合都是一个模型名称，请按所示名称请求。",
+    "edge_note": "这些端点位于同一主机，并使用与代理相同的密钥。",
+    "stt_test_note": "上传文件进行测试"
   }
 }

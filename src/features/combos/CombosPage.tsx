@@ -7,6 +7,11 @@ import { Select } from '@/components/ui/Select';
 import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConnectionCard } from '@/components/common/ConnectionCard';
+import { CopyButton } from '@/components/common/CopyButton';
+import { Snippet } from '@/components/common/Snippet';
+import { useClientAccess } from '@/features/shared/useClientAccess';
+import { chatCurl, chatRequestBody } from '@/features/shared/endpointSnippets';
 import { pluginsApi, edgeApi } from '@/services/api';
 import { useAuthStore, useNotificationStore } from '@/stores';
 import { getErrorMessage } from '@/utils/helpers';
@@ -45,6 +50,8 @@ export function CombosPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [newComboName, setNewComboName] = useState('');
+  const access = useClientAccess();
+  const [tests, setTests] = useState<Record<string, { state: 'idle' | 'running' | 'ok' | 'error'; message: string }>>({});
 
   const connected = connectionStatus === 'connected';
   const dirty = useMemo(
@@ -181,6 +188,38 @@ export function CombosPage() {
     }
   };
 
+  const runTest = async (comboName: string) => {
+    if (!access.baseUrl || !access.apiKey) return;
+    setTests((current) => ({ ...current, [comboName]: { state: 'running', message: '' } }));
+    const started = performance.now();
+    try {
+      const response = await fetch(`${access.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access.apiKey}`,
+        },
+        body: JSON.stringify(chatRequestBody(comboName)),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { model?: string; error?: { message?: string } }
+        | null;
+      if (!response.ok || payload?.error) {
+        throw new Error(payload?.error?.message ?? `HTTP ${response.status}`);
+      }
+      const elapsed = Math.round(performance.now() - started);
+      setTests((current) => ({
+        ...current,
+        [comboName]: { state: 'ok', message: t('connect.test_ok', { model: payload?.model ?? comboName, ms: elapsed }) },
+      }));
+    } catch (err) {
+      setTests((current) => ({
+        ...current,
+        [comboName]: { state: 'error', message: err instanceof Error ? err.message : String(err) },
+      }));
+    }
+  };
+
   const save = async () => {
     if (!config) return;
     const issues = validateCombos(config);
@@ -267,6 +306,12 @@ export function CombosPage() {
         </datalist>
       </Card>
 
+      <ConnectionCard
+        baseUrl={access.baseUrl}
+        apiKey={access.apiKey}
+        note={t('connect.combos_note')}
+      />
+
       <Card
         title={t('combos.list_title', { count: config?.combos.length ?? 0 })}
         extra={
@@ -318,6 +363,34 @@ export function CombosPage() {
                 placeholder={t('combos.description_placeholder')}
                 onChange={(event) => updateCombo(index, { description: event.target.value })}
               />
+              <div className={styles.connectRow}>
+                <span className={styles.connectLabel}>{t('connect.use_it')}</span>
+                <code className={styles.connectModel}>{combo.name || t('combos.name')}</code>
+                <CopyButton value={combo.name} label={t('connect.copy_model')} />
+                <Snippet
+                  className={styles.snippetInline}
+                  label={t('connect.curl_label')}
+                  code={chatCurl(access.baseUrl, access.apiKey, combo.name)}
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void runTest(combo.name)}
+                  loading={tests[combo.name]?.state === 'running'}
+                  disabled={!access.apiKey || !combo.name}
+                >
+                  {t('connect.test')}
+                </Button>
+                {tests[combo.name] && tests[combo.name].state !== 'running' ? (
+                  <span
+                    className={
+                      tests[combo.name].state === 'ok' ? styles.testOk : styles.testFail
+                    }
+                  >
+                    {tests[combo.name].message}
+                  </span>
+                ) : null}
+              </div>
               <div className={styles.members}>
                 {combo.models.map((model, modelIndex) => (
                   <div className={styles.member} key={`${model}-${modelIndex}`}>

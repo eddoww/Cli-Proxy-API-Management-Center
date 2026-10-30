@@ -103,3 +103,53 @@
     gap: 12px;
   }
 }
+
+.connectRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 8px;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+}
+
+.connectLabel {
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.connectUrl {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  font-size: 12px;
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.snippetInline {
+  margin-top: 10px;
+}
+
+.testOk {
+  color: var(--success-color, #16a34a);
+  font-size: 12px;
+}
+
+.testFail {
+  color: var(--danger-color, #dc2626);
+  font-size: 12px;
+  max-width: 420px;
+  overflow-wrap: anywhere;
+}
+
+.testNote {
+  color: var(--text-secondary);
+  font-size: 12px;
+}

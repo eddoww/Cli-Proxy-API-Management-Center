@@ -2398,5 +2398,27 @@
     "save_failed": "엣지 설정을 저장할 수 없습니다",
     "load_failed": "엣지 서비스에 연결할 수 없습니다",
     "unavailable": "AI 엣지를 사용할 수 없습니다"
+  },
+  "connect": {
+    "title": "앱 연결",
+    "intro": "OpenAI 호환 클라이언트에 이 기본 URL과 아래 키를 설정하세요.",
+    "base_url": "기본 URL",
+    "api_key": "API 키",
+    "no_key": "설정된 클라이언트 키가 없습니다",
+    "unavailable": "연결할 수 없습니다",
+    "reveal": "표시",
+    "hide": "숨기기",
+    "copy": "복사",
+    "copied": "복사됨",
+    "use_it": "사용",
+    "copy_model": "모델 복사",
+    "curl_label": "curl",
+    "endpoint": "엔드포인트",
+    "copy_url": "URL 복사",
+    "test": "테스트",
+    "test_ok": "정상 · {{model}} · {{ms}} ms",
+    "combos_note": "아래 콤보는 모델 이름입니다. 표시된 그대로 요청하세요.",
+    "edge_note": "이 엔드포인트는 같은 호스트에서 프록시와 같은 키를 사용합니다.",
+    "stt_test_note": "파일을 업로드해 테스트하세요"
   }
 }

@@ -6,6 +6,17 @@ import { Input } from '@/components/ui/Input';
 import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConnectionCard } from '@/components/common/ConnectionCard';
+import { CopyButton } from '@/components/common/CopyButton';
+import { Snippet } from '@/components/common/Snippet';
+import { useClientAccess } from '@/features/shared/useClientAccess';
+import {
+  embeddingsCurl,
+  embeddingsRequestBody,
+  systemOneCurl,
+  systemOneRequestBody,
+  transcriptionsCurl,
+} from '@/features/shared/endpointSnippets';
 import {
   edgeApi,
   type EdgeEndpointSettings,
@@ -21,12 +32,20 @@ interface EndpointMeta {
   key: 'typesafe' | 'embeddings' | 'transcriptions';
   provider: 'typesafe' | 'mistral' | 'groq';
   modelHint: string;
+  path: string;
+  testable: boolean;
 }
 
 const ENDPOINTS: EndpointMeta[] = [
-  { key: 'typesafe', provider: 'typesafe', modelHint: 'jev-latest' },
-  { key: 'embeddings', provider: 'mistral', modelHint: 'mistral-embed' },
-  { key: 'transcriptions', provider: 'groq', modelHint: 'whisper-large-v3' },
+  { key: 'typesafe', provider: 'typesafe', modelHint: 'jev-latest', path: '/systemone', testable: true },
+  { key: 'embeddings', provider: 'mistral', modelHint: 'mistral-embed', path: '/embeddings', testable: true },
+  {
+    key: 'transcriptions',
+    provider: 'groq',
+    modelHint: 'whisper-large-v3',
+    path: '/audio/transcriptions',
+    testable: false,
+  },
 ];
 
 export function EdgePage() {
@@ -41,6 +60,8 @@ export function EdgePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const access = useClientAccess();
+  const [tests, setTests] = useState<Record<string, { state: 'idle' | 'running' | 'ok' | 'error'; message: string }>>({});
 
   const connected = connectionStatus === 'connected';
   const dirty = useMemo(
@@ -89,6 +110,42 @@ export function EdgePage() {
       if (!current) return current;
       return { ...current, transcriptions: { ...current.transcriptions, ...patch } };
     });
+  };
+
+  const runTest = async (endpoint: EndpointMeta) => {
+    if (!access.baseUrl || !access.apiKey) return;
+    const body =
+      endpoint.key === 'typesafe'
+        ? systemOneRequestBody(settings?.typesafe.model ?? 'jev-latest')
+        : embeddingsRequestBody(settings?.embeddings.model ?? 'mistral-embed');
+    setTests((current) => ({ ...current, [endpoint.key]: { state: 'running', message: '' } }));
+    const started = performance.now();
+    try {
+      const response = await fetch(`${access.baseUrl}${endpoint.path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access.apiKey}` },
+        body: JSON.stringify(body),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { model?: string; error?: { message?: string } }
+        | null;
+      if (!response.ok || payload?.error) {
+        throw new Error(payload?.error?.message ?? `HTTP ${response.status}`);
+      }
+      const elapsed = Math.round(performance.now() - started);
+      setTests((current) => ({
+        ...current,
+        [endpoint.key]: {
+          state: 'ok',
+          message: t('connect.test_ok', { model: payload?.model ?? endpoint.modelHint, ms: elapsed }),
+        },
+      }));
+    } catch (err) {
+      setTests((current) => ({
+        ...current,
+        [endpoint.key]: { state: 'error', message: err instanceof Error ? err.message : String(err) },
+      }));
+    }
   };
 
   const save = async () => {
@@ -164,6 +221,8 @@ export function EdgePage() {
         </datalist>
       </Card>
 
+      <ConnectionCard baseUrl={access.baseUrl} apiKey={access.apiKey} note={t('connect.edge_note')} />
+
       {ENDPOINTS.map((endpoint) => {
         const configured = status?.providers[endpoint.provider] ?? false;
         const value = settings[endpoint.key];
@@ -220,6 +279,40 @@ export function EdgePage() {
                 </label>
               ) : null}
             </div>
+            <div className={styles.connectRow}>
+              <span className={styles.connectLabel}>{t('connect.endpoint')}</span>
+              <code className={styles.connectUrl}>{`${access.baseUrl}${endpoint.path}`}</code>
+              <CopyButton value={`${access.baseUrl}${endpoint.path}`} label={t('connect.copy_url')} />
+              {endpoint.testable ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void runTest(endpoint)}
+                  loading={tests[endpoint.key]?.state === 'running'}
+                  disabled={!access.apiKey || !configured || !value.enabled}
+                >
+                  {t('connect.test')}
+                </Button>
+              ) : (
+                <span className={styles.testNote}>{t('connect.stt_test_note')}</span>
+              )}
+              {tests[endpoint.key] && tests[endpoint.key].state !== 'running' ? (
+                <span className={tests[endpoint.key].state === 'ok' ? styles.testOk : styles.testFail}>
+                  {tests[endpoint.key].message}
+                </span>
+              ) : null}
+            </div>
+            <Snippet
+              className={styles.snippetInline}
+              label={t('connect.curl_label')}
+              code={
+                endpoint.key === 'typesafe'
+                  ? systemOneCurl(access.baseUrl, access.apiKey, value.model)
+                  : endpoint.key === 'embeddings'
+                    ? embeddingsCurl(access.baseUrl, access.apiKey, value.model)
+                    : transcriptionsCurl(access.baseUrl, access.apiKey, value.model)
+              }
+            />
           </Card>
         );
       })}

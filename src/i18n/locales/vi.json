@@ -2404,5 +2404,27 @@
     "save_failed": "Không lưu được cài đặt Edge",
     "load_failed": "Không kết nối được dịch vụ Edge",
     "unavailable": "AI Edge không khả dụng"
+  },
+  "connect": {
+    "title": "Kết nối ứng dụng",
+    "intro": "Trỏ bất kỳ ứng dụng tương thích OpenAI vào URL gốc này và dùng khóa bên dưới.",
+    "base_url": "URL gốc",
+    "api_key": "Khóa API",
+    "no_key": "Chưa cấu hình khóa ứng dụng",
+    "unavailable": "Không kết nối được",
+    "reveal": "Hiện",
+    "hide": "Ẩn",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép",
+    "use_it": "Dùng",
+    "copy_model": "Sao chép mô hình",
+    "curl_label": "curl",
+    "endpoint": "Điểm cuối",
+    "copy_url": "Sao chép URL",
+    "test": "Kiểm tra",
+    "test_ok": "OK · {{model}} · {{ms}} ms",
+    "combos_note": "Mỗi combo bên dưới là một tên mô hình; hãy yêu cầu đúng như hiển thị.",
+    "edge_note": "Các điểm cuối này nằm trên cùng máy chủ và dùng cùng khóa với proxy.",
+    "stt_test_note": "Tải tệp lên để kiểm tra"
   }
 }

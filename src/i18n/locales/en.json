@@ -2398,5 +2398,27 @@
     "save_failed": "Could not save edge settings",
     "load_failed": "Could not reach the edge service",
     "unavailable": "AI Edge unavailable"
+  },
+  "connect": {
+    "title": "Connect your app",
+    "intro": "Point any OpenAI-compatible client at this base URL and use the key below.",
+    "base_url": "Base URL",
+    "api_key": "API key",
+    "no_key": "No client key configured",
+    "unavailable": "Connection unavailable",
+    "reveal": "Show",
+    "hide": "Hide",
+    "copy": "Copy",
+    "copied": "Copied",
+    "use_it": "Use it",
+    "copy_model": "Copy model",
+    "curl_label": "curl",
+    "endpoint": "Endpoint",
+    "copy_url": "Copy URL",
+    "test": "Test",
+    "test_ok": "OK · {{model}} · {{ms}} ms",
+    "combos_note": "Each combo below is a model name; request it exactly as shown.",
+    "edge_note": "These endpoints live on the same host and use the same key as the proxy.",
+    "stt_test_note": "Upload a file to test this one"
   }
 }

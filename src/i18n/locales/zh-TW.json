@@ -2424,5 +2424,27 @@
     "save_failed": "無法儲存前置設定",
     "load_failed": "無法連線前置服務",
     "unavailable": "AI 前置無法使用"
+  },
+  "connect": {
+    "title": "連接你的應用程式",
+    "intro": "將任何 OpenAI 相容用戶端指向此基礎 URL，並使用下方金鑰。",
+    "base_url": "基礎 URL",
+    "api_key": "API 金鑰",
+    "no_key": "尚未設定用戶端金鑰",
+    "unavailable": "連線不可用",
+    "reveal": "顯示",
+    "hide": "隱藏",
+    "copy": "複製",
+    "copied": "已複製",
+    "use_it": "使用",
+    "copy_model": "複製模型",
+    "curl_label": "curl",
+    "endpoint": "端點",
+    "copy_url": "複製 URL",
+    "test": "測試",
+    "test_ok": "正常 · {{model}} · {{ms}} 毫秒",
+    "combos_note": "下面的每個組合都是模型名稱，請依顯示名稱請求。",
+    "edge_note": "這些端點位於同一主機，並使用與代理相同的金鑰。",
+    "stt_test_note": "上傳檔案進行測試"
   }
 }
