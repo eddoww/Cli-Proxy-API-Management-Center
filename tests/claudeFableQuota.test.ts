@@ -273,4 +273,101 @@ describe('Claude Fable quota', () => {
       { id: 'seven-day', usedPercent: 20 },
     ]);
   });
+
+  describe('retired 5-hour window', () => {
+    // Shape observed live after the plan became Ultra: the 5-hour window is
+    // still in the payload as a zeroed shell, and limits[] marks the unscoped
+    // session entry inactive with no reset instant.
+    const ultraPayload = {
+      five_hour: { utilization: 0, resets_at: null },
+      seven_day: { utilization: 100, resets_at: legacyReset },
+      limits: [
+        { kind: 'session', group: 'session', percent: 0, resets_at: null, is_active: false },
+        {
+          kind: 'weekly_all',
+          group: 'weekly',
+          percent: 100,
+          resets_at: legacyReset,
+          is_active: true,
+        },
+        {
+          kind: 'weekly_scoped',
+          group: 'weekly',
+          percent: 0,
+          resets_at: modernReset,
+          is_active: false,
+          scope: { model: { id: null, display_name: 'Fable' }, surface: null },
+        },
+      ],
+    } as unknown as ClaudeUsagePayload;
+
+    test('drops the zeroed 5-hour shell and keeps the single weekly limit', () => {
+      const windows = buildClaudeQuotaWindows(ultraPayload, t);
+
+      expect(windows.map(({ id, usedPercent }) => ({ id, usedPercent }))).toEqual([
+        { id: 'seven-day', usedPercent: 100 },
+        { id: 'seven-day-fable', usedPercent: 0 },
+      ]);
+    });
+
+    test('keeps the 5-hour window while the session limit still reports usage', () => {
+      const windows = buildClaudeQuotaWindows(
+        {
+          ...ultraPayload,
+          five_hour: { utilization: 42, resets_at: null },
+        } as unknown as ClaudeUsagePayload,
+        t
+      );
+
+      expect(windows.map(({ id }) => id)).toContain('five-hour');
+    });
+
+    test('keeps the 5-hour window when the session entry is still active', () => {
+      const windows = buildClaudeQuotaWindows(
+        {
+          ...ultraPayload,
+          limits: [
+            { kind: 'session', percent: 12, resets_at: null, is_active: true },
+            ...(ultraPayload.limits ?? []).slice(1),
+          ],
+        } as unknown as ClaudeUsagePayload,
+        t
+      );
+
+      expect(windows.map(({ id }) => id)).toContain('five-hour');
+    });
+
+    test('keeps the 5-hour window when the payload predates limits[]', () => {
+      const windows = buildClaudeQuotaWindows(
+        {
+          five_hour: { utilization: 0, resets_at: null },
+          seven_day: { utilization: 30, resets_at: legacyReset },
+        } as unknown as ClaudeUsagePayload,
+        t
+      );
+
+      expect(windows.map(({ id }) => id)).toEqual(['five-hour', 'seven-day']);
+    });
+
+    test('does not retire the window off a model-scoped session-looking limit', () => {
+      const windows = buildClaudeQuotaWindows(
+        {
+          five_hour: { utilization: 0, resets_at: null },
+          seven_day: { utilization: 30, resets_at: legacyReset },
+          limits: [
+            {
+              kind: 'session',
+              percent: 0,
+              resets_at: null,
+              is_active: false,
+              scope: { model: { display_name: 'Fable' } },
+            },
+          ],
+        } as unknown as ClaudeUsagePayload,
+        t
+      );
+
+      expect(windows.map(({ id }) => id)).toContain('five-hour');
+    });
+  });
 });

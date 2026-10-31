@@ -62,6 +62,34 @@ const findFableUsageLimit = (payload: ClaudeUsagePayload) => {
   return candidates.find((limit) => limit.is_active === true) ?? candidates[0] ?? null;
 };
 
+/**
+ * Anthropic retired the 5-hour window but still ships `five_hour` in the payload
+ * as a zeroed shell (`utilization: 0`, null `resets_at`), so presence alone no
+ * longer means the window exists. Retirement is only inferred from positive
+ * evidence: a zeroed `five_hour`, plus an unscoped `session` entry in `limits[]`
+ * that is inactive and carries no reset instant. Any other shape — a live
+ * utilization, an active session, a reset instant, a payload without the
+ * unscoped session entry (or without `limits[]` at all) — keeps the window, so
+ * an odd or partially-scoped payload degrades to today's rendering.
+ */
+const hasLiveFiveHourWindow = (payload: ClaudeUsagePayload): boolean => {
+  if (!Array.isArray(payload.limits)) return true;
+
+  const fiveHour = payload.five_hour;
+  const utilization = normalizeNumberValue(fiveHour?.utilization);
+  if (utilization !== null && utilization > 0) return true;
+
+  const session = payload.limits.find(
+    (limit) =>
+      (normalizeStringValue(limit?.kind) ?? '').trim().toLowerCase() === 'session' &&
+      normalizeStringValue(limit?.scope?.model?.display_name) === null &&
+      normalizeStringValue(limit?.scope?.surface) === null
+  );
+  if (!session) return true;
+  if (session.is_active === true) return true;
+  return resolveResetMs([session.resets_at]) !== null;
+};
+
 const isDollarDenominatedWindow = (window: ClaudeUsageWindow) =>
   normalizeNumberValue(window.limit_dollars) !== null ||
   normalizeNumberValue(window.used_dollars) !== null ||
@@ -73,6 +101,7 @@ export const buildClaudeQuotaWindows = (
 ): ClaudeQuotaWindow[] => {
   const windows: ClaudeQuotaWindow[] = [];
   const fableLimit = findFableUsageLimit(payload);
+  const fiveHourRetired = !hasLiveFiveHourWindow(payload);
 
   for (const { key, id, labelKey } of CLAUDE_USAGE_WINDOW_KEYS) {
     const window = payload[key as keyof ClaudeUsagePayload];
@@ -80,6 +109,9 @@ export const buildClaudeQuotaWindows = (
     const typedWindow = window as ClaudeUsageWindow;
     const isCreditPool = key === 'iguana_necktie' && isDollarDenominatedWindow(typedWindow);
     if (key === 'iguana_necktie' && fableLimit && !isCreditPool) continue;
+    // The retired 5-hour window still arrives as a zeroed shell; drop it so the
+    // card shows only the weekly limit that now governs the account.
+    if (key === 'five_hour' && fiveHourRetired) continue;
     if (isCreditPool) {
       windows.push({
         id: 'cloud-session-credits',
@@ -157,11 +189,31 @@ const parseClaudeProfilePayload = (payload: unknown): ClaudeProfileResponse | nu
 };
 
 /**
- * The organization's rate-limit tier is the only field that separates Max 5x
- * from Max 20x (`default_claude_max_5x` / `default_claude_max_20x`); the account
- * flags only say "Max". Pro reports `default_claude_ai`, which Team/Free share,
- * so it is not used to identify Pro.
+ * The organization's rate-limit tier separates Max 5x from Max 20x
+ * (`default_claude_max_5x` / `default_claude_max_20x`); the account flags only
+ * say "Max". Pro reports `default_claude_ai`, which Team/Free share, so it is
+ * not used to identify Pro.
+ *
+ * Anthropic renamed Max 20x to "Ultra" but left `rate_limit_tier` untouched, so
+ * the tier alone can never distinguish the two. `plan_display_name` (and its
+ * matching label) is the only field carrying the current marketing name; it is
+ * absent on plans that have not been renamed, where the tier still decides.
  */
+const resolveClaudeDisplayPlan = (profile: ClaudeProfileResponse): string | null => {
+  const organization = profile.organization as
+    | (NonNullable<ClaudeProfileResponse['organization']> & {
+        planDisplayName?: string;
+        planDisplayLabel?: string;
+      })
+    | undefined;
+  const displayName = normalizeStringValue(
+    organization?.plan_display_name ?? organization?.planDisplayName
+  )?.toLowerCase();
+  if (!displayName) return null;
+  if (displayName === 'ultra' || displayName.startsWith('ultra ')) return 'plan_ultra';
+  return null;
+};
+
 const resolveClaudeMaxTier = (profile: ClaudeProfileResponse): string | null => {
   const organization = profile.organization as
     (NonNullable<ClaudeProfileResponse['organization']> & { rateLimitTier?: string }) | undefined;
@@ -187,6 +239,11 @@ export const resolveClaudePlanType = (profile: ClaudeProfileResponse | null): st
   if (organizationType === 'claude_team' && subscriptionStatus === 'active') {
     return 'plan_team';
   }
+
+  // The display name is the only source for the post-rename plan name, and a
+  // renamed plan outranks the tier string that still reads `max_20x`.
+  const displayPlan = resolveClaudeDisplayPlan(profile);
+  if (displayPlan) return displayPlan;
 
   // Account flags include personal subscriptions even for a Team-scoped token.
   // A Team-scoped token carries the Team organization's tier, so a personal

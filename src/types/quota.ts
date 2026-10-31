@@ -116,6 +116,8 @@ export interface ClaudeUsageLimit {
       id?: string | null;
       display_name?: string | null;
     } | null;
+    /** Present (usually null) on model-scoped limits such as the Fable weekly. */
+    surface?: string | null;
   } | null;
 }
 
@@ -188,6 +190,13 @@ export interface ClaudeProfileResponse {
     organization_type?: string;
     billing_type?: string;
     rate_limit_tier?: string;
+    /**
+     * Anthropic kept `rate_limit_tier` at `default_claude_max_20x` when the Max
+     * 20x plan was renamed, so the display fields are the only place the new
+     * name appears: `plan_display_name` is "Ultra", the label "Ultra plan".
+     */
+    plan_display_name?: string;
+    plan_display_label?: string;
     has_extra_usage_enabled?: boolean;
     subscription_status?: string;
     subscription_created_at?: string;

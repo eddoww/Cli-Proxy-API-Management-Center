@@ -100,6 +100,51 @@ describe('Claude plan type', () => {
     ).toBe('plan_free');
   });
 
+  test.each(['Ultra', 'ultra', ' ULTRA plan ', 'Ultra 20x'])(
+    'treats the display name %p as the renamed Max 20x plan',
+    (planDisplayName: string) => {
+      expect(
+        resolveClaudePlanType({
+          account: { has_claude_max: true },
+          // Anthropic left the tier at max_20x when it renamed the plan, so the
+          // display name is the only field carrying "Ultra".
+          organization: {
+            rate_limit_tier: 'default_claude_max_20x',
+            plan_display_name: planDisplayName,
+          },
+        })
+      ).toBe('plan_ultra');
+    }
+  );
+
+  test('lets a renamed plan win over the stale max_20x tier', () => {
+    const profile: ClaudeProfileResponse = {
+      account: { has_claude_max: true, has_claude_pro: false },
+      organization: {
+        organization_type: 'claude_max',
+        rate_limit_tier: 'default_claude_max_20x',
+        plan_display_name: 'Ultra',
+        plan_display_label: 'Ultra plan',
+      },
+    };
+    expect(resolveClaudePlanType(profile)).toBe('plan_ultra');
+  });
+
+  test('falls back to the tier when the display name is unrelated or missing', () => {
+    expect(
+      resolveClaudePlanType({
+        account: { has_claude_max: true },
+        organization: { rate_limit_tier: 'default_claude_max_20x', plan_display_name: 'Max' },
+      })
+    ).toBe('plan_max20');
+    expect(
+      resolveClaudePlanType({
+        account: { has_claude_max: true },
+        organization: { rate_limit_tier: 'default_claude_max_5x' },
+      })
+    ).toBe('plan_max5');
+  });
+
   test('an active Team organization still wins over a Max tier', () => {
     expect(
       resolveClaudePlanType({

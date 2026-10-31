@@ -57,7 +57,7 @@ export function resolveAntigravityCardTier(plan: string | null | undefined): Quo
 }
 
 export function resolveClaudeCardTier(planType: string | null | undefined): QuotaCardTier {
-  if (planType === 'plan_max20') return 'flagship';
+  if (planType === 'plan_ultra' || planType === 'plan_max20') return 'flagship';
   // 未区分 5x/20x 的 Max 按低一档保守处理。
   if (planType === 'plan_max5' || planType === 'plan_max') return 'premium';
   return 'standard';

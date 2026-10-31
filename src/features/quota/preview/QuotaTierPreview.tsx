@@ -127,23 +127,32 @@ const antigravityQuota = (plan: string, remaining: [number, number]): Antigravit
   ],
 });
 
-const claudeQuota = (planType: string, used: [number, number]): ClaudeQuotaState => ({
+/**
+ * The preview mirrors what the live card renders: an account with a rolling
+ * 5-hour window shows two bars, an Ultra account (5-hour retired, one weekly
+ * limit) shows a single seven-day bar.
+ */
+const claudeQuota = (planType: string, used: number[]): ClaudeQuotaState => ({
   status: 'success',
   planType,
   observedAt: new Date().toISOString(),
   windows: [
-    {
-      id: 'five-hour',
-      label: '5 小时',
-      usedPercent: used[0],
-      resetLabel: '',
-      resetAtMs: Date.now() + 2 * HOUR_MS,
-      periodHours: 5,
-    },
+    ...(used.length > 1
+      ? [
+          {
+            id: 'five-hour',
+            label: '5 小时',
+            usedPercent: used[0],
+            resetLabel: '',
+            resetAtMs: Date.now() + 2 * HOUR_MS,
+            periodHours: 5,
+          },
+        ]
+      : []),
     {
       id: 'seven-day',
       label: '每周 · 全部模型',
-      usedPercent: used[1],
+      usedPercent: used[used.length - 1],
       resetLabel: '',
       resetAtMs: Date.now() + 3 * DAY_MS,
       periodHours: 168,
@@ -175,8 +184,8 @@ const buildAccounts = (): MockAccount[] => [
     quota: codexQuota('promax', [6, 21]),
   },
   {
-    entry: { type: 'claude', file: file('claude-max20.json', 'claude') },
-    quota: claudeQuota('plan_max20', [36, 72]),
+    entry: { type: 'claude', file: file('claude-ultra.json', 'claude') },
+    quota: claudeQuota('plan_ultra', [72]),
   },
   {
     entry: { type: 'xai', file: file('grok-heavy.json', 'xai') },

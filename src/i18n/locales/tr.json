@@ -206,7 +206,15 @@
     "cta_system_desc": "Sürüm Ayrıntıları ve Yönetim Merkezi Bilgisi.",
     "window_m": "{{minutes}} dk",
     "window_h": "{{hours}} sa",
-    "window_hm": "{{hours}} sa {{minutes}} dk"
+    "window_hm": "{{hours}} sa {{minutes}} dk",
+    "accounts_account": "Hesap",
+    "accounts_ok_fail": "Başarılı / Başarısız",
+    "accounts_provider": "Sağlayıcı",
+    "accounts_state": "Durum",
+    "accounts_state_active": "Etkin",
+    "accounts_state_cooling": "Soğuma sürecinde",
+    "accounts_state_disabled": "Devre dışı",
+    "accounts_state_unavailable": "Kullanılamıyor"
   },
   "basic_settings": {
     "debug_enable": "Hata Ayıklama Modunu Etkinleştir",
@@ -529,6 +537,7 @@
     "plan_pro": "Pro",
     "plan_max": "Max",
     "plan_max5": "Max 5x",
+    "plan_ultra": "Ultra",
     "plan_max20": "Max 20x",
     "plan_team": "Team"
   },
